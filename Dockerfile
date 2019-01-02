@@ -14,6 +14,29 @@ RUN go get -d -v github.com/hanwen/go-fuse/fuse
 
 EXPOSE 22
 
+# Install FUSE
+
+WORKDIR /opt
+
+RUN git clone https://github.com/libfuse/libfuse
+
+WORKDIR /opt/libfuse
+
+RUN mkdir build
+
+WORKDIR /opt/libfuse/build
+
+RUN meson ..
+
+RUN ninja
+
+RUN sudo ninja install
+
+# Add folder to use as an entrypoint
+
+WORKDIR /home
+RUN mkdir entrypoint
+
 # Run the project
 
-RUN go run github.com/LinuxArmor/SaFSt-Go/main
+RUN go run github.com/LinuxArmor/SaFSt-Go/main /home/entrypoint

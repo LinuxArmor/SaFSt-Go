@@ -4,6 +4,7 @@ FROM golang:latest
 
 # Copy Files to the container
 
+
 COPY . /go/src/github.com/LinuxArmor/SaFSt-Go
 
 # Install dependencies
@@ -16,21 +17,24 @@ EXPOSE 22
 
 # Install FUSE
 
-WORKDIR /opt
 
-RUN git clone https://github.com/libfuse/libfuse
-
-WORKDIR /opt/libfuse
-
-RUN mkdir build
-
-WORKDIR /opt/libfuse/build
-
-RUN meson ..
-
-RUN ninja
-
-RUN sudo ninja install
+## Install FUSE
+#
+#WORKDIR /opt
+#
+#RUN git clone https://github.com/libfuse/libfuse
+#
+#WORKDIR /opt/libfuse
+#
+#RUN mkdir build
+#
+#WORKDIR /opt/libfuse/build
+#
+#RUN meson ..
+#
+#RUN ninja
+#
+#RUN sudo ninja install
 
 # Add folder to use as an entrypoint
 

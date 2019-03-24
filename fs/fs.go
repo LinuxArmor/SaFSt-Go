@@ -1,3 +1,4 @@
+// This package includes basic fuse-ops
 package fs
 
 import (
@@ -16,7 +17,7 @@ type FileSystem struct {
 	debug bool
 }
 
-// Provides debug on true
+// Sets a new debug value which is used for logging actions.
 func (fs *FileSystem) SetDebug(debug bool) {
 	fs.debug = debug
 }

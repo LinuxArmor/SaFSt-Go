@@ -13,8 +13,10 @@ func main() {
 	if len(flag.Args()) < 1 {
 		log.Fatal("You need to specify a mountpoint!")
 	}
-	nfs := pathfs.NewPathNodeFs(fs.NewFileSystem("/usr/local/var/safst"), nil) // create a nodefs
-	server, _, err := nodefs.MountRoot(flag.Arg(0), nfs.Root(), nil)           // create a server from the nodefs
+	filesys := fs.NewFileSystem("/usr/local/var/safst")
+	filesys.SetDebug(true)
+	nfs := pathfs.NewPathNodeFs(filesys, nil)                        // create a nodefs
+	server, _, err := nodefs.MountRoot(flag.Arg(0), nfs.Root(), nil) // create a server from the nodefs
 
 	if err != nil {
 		log.Fatalf("Mount fail: %v\n", err)

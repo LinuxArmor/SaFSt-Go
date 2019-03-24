@@ -17,24 +17,23 @@ EXPOSE 22
 
 # Install FUSE
 
+RUN apt install meson ninja-build
 
-## Install FUSE
-#
-#WORKDIR /opt
-#
-#RUN git clone https://github.com/libfuse/libfuse
-#
-#WORKDIR /opt/libfuse
-#
-#RUN mkdir build
-#
-#WORKDIR /opt/libfuse/build
-#
-#RUN meson ..
-#
-#RUN ninja
-#
-#RUN sudo ninja install
+WORKDIR /opt
+
+RUN git clone https://github.com/libfuse/libfuse
+
+WORKDIR /opt/libfuse
+
+RUN mkdir build
+
+WORKDIR /opt/libfuse/build
+
+RUN meson ..
+
+RUN ninja
+
+RUN ninja install
 
 # Add folder to use as an entrypoint
 

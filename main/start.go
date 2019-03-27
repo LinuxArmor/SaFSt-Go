@@ -21,6 +21,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Mount fail: %v\n", err)
 	}
-	println("Hello Docker!")
+	log.Println("Mouting The FileSystem...")
 	server.Serve() // mount our filesystem
 }

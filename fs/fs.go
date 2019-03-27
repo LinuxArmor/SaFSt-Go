@@ -11,19 +11,19 @@ import (
 	"syscall"
 )
 
-type FileSystem struct {
+type SaFStFileSystem struct {
 	pathfs.FileSystem
 	dir   string
 	debug bool
 }
 
 // Sets a new debug value which is used for logging actions.
-func (fs *FileSystem) SetDebug(debug bool) {
+func (fs *SaFStFileSystem) SetDebug(debug bool) {
 	fs.debug = debug
 }
 
 // Called when a dir is opened
-func (fs *FileSystem) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry, fuse.Status) {
+func (fs *SaFStFileSystem) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry, fuse.Status) {
 	dir, err := ioutil.ReadDir(fs.dir + name)
 
 	if err != nil {
@@ -47,7 +47,7 @@ func (fs *FileSystem) OpenDir(name string, context *fuse.Context) ([]fuse.DirEnt
 	return c, fuse.OK
 }
 
-func (fs *FileSystem) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
+func (fs *SaFStFileSystem) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
 	stat, err := os.Stat(fs.dir + name)
 	if err != nil {
 		if fs.debug {
@@ -67,7 +67,7 @@ func (fs *FileSystem) GetAttr(name string, context *fuse.Context) (*fuse.Attr, f
 	return attr, fuse.OK
 }
 
-func (fs *FileSystem) Open(name string, flags uint32, context *fuse.Context) (nodefs.File, fuse.Status) {
+func (fs *SaFStFileSystem) Open(name string, flags uint32, context *fuse.Context) (nodefs.File, fuse.Status) {
 	file, err := os.Open(name)
 
 	if err != nil {
@@ -84,6 +84,6 @@ func (fs *FileSystem) Open(name string, flags uint32, context *fuse.Context) (no
 	return nodefs.NewLoopbackFile(file), fuse.OK
 }
 
-func NewFileSystem(dir string) *FileSystem {
-	return &FileSystem{pathfs.NewDefaultFileSystem(), dir, false}
+func NewFileSystem(dir string) *SaFStFileSystem {
+	return &SaFStFileSystem{pathfs.NewDefaultFileSystem(), dir, false}
 }

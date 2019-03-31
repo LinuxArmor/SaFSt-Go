@@ -1,11 +1,12 @@
 package main
 
 import (
+	"../fs"
 	"flag"
-	"github.com/LinuxArmor/SaFSt-Go/fs"
 	"github.com/hanwen/go-fuse/fuse/nodefs"
 	"github.com/hanwen/go-fuse/fuse/pathfs"
 	"log"
+	"os"
 )
 
 func main() {
@@ -13,14 +14,27 @@ func main() {
 	if len(flag.Args()) < 1 {
 		log.Fatal("You need to specify a mountpoint!")
 	}
+	file, err := os.Open("/usr/local/var/safst")
+	if err != nil {
+		mkdirerr := os.Mkdir("/usr/local/var/safst", 0700)
+		if mkdirerr != nil {
+			log.Fatal("Cannot open and create /usr/local/var/safst")
+		}
+	}
+	if file != nil {
+		err := file.Close()
+		if err != nil {
+			log.Fatal("Couldn't close /usr/local/var/safst")
+		}
+	}
 	filesys := fs.NewFileSystem("/usr/local/var/safst")
 	filesys.SetDebug(true)
-	nfs := pathfs.NewPathNodeFs(filesys, nil)                        // create a nodefs
+	nfs := pathfs.NewPathNodeFs(filesys, pathfs.PathNodeFsOptions{}) // create a nodefs
 	server, _, err := nodefs.MountRoot(flag.Arg(0), nfs.Root(), nil) // create a server from the nodefs
 
 	if err != nil {
 		log.Fatalf("Mount fail: %v\n", err)
 	}
-	log.Println("Mouting The FileSystem...")
+	log.Println("Mounting The FileSystem...")
 	server.Serve() // mount our filesystem
 }

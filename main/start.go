@@ -29,7 +29,7 @@ func main() {
 	}
 	filesys := fs.NewFileSystem("/usr/local/var/safst")
 	filesys.SetDebug(true)
-	nfs := pathfs.NewPathNodeFs(filesys, pathfs.PathNodeFsOptions{}) // create a nodefs
+	nfs := pathfs.NewPathNodeFs(filesys, nil)                        // create a nodefs
 	server, _, err := nodefs.MountRoot(flag.Arg(0), nfs.Root(), nil) // create a server from the nodefs
 
 	if err != nil {

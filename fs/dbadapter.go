@@ -7,12 +7,10 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"log"
 	"os"
-	"sync"
 	"syscall"
 	"time"
 )
 
-var mutex sync.Mutex = sync.Mutex{} // use a mutex to prevent reading and writing at the same time
 const DbFolder, FileFolder string = "/usr/local/var/safst", DbFolder + "/files"
 
 var Db, Err = leveldb.OpenFile(DbFolder, &opt.Options{})
@@ -78,10 +76,10 @@ func getFile(path []byte) (fuse.Attr, error) {
 
 	var f fuse.Attr
 
-	marshalerr := json.Unmarshal(file, f)
+	err = json.Unmarshal(file, f)
 
-	if marshalerr != nil {
-		return fuse.Attr{}, marshalerr
+	if err != nil {
+		return fuse.Attr{}, err
 	}
 
 	return f, nil

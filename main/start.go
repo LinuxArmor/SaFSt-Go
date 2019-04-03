@@ -10,6 +10,7 @@ import (
 	"syscall"
 )
 
+// Checks if the necessary folders exist before launching
 func checkDirectory(path string) {
 	s, err := os.Stat(path)
 	if os.IsNotExist(err) { // Check if the folder exists

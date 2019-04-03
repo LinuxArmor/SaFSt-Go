@@ -16,7 +16,7 @@ COPY . /go/src/github.com/LinuxArmor/SaFSt-Go
 
 # Install dependencies
 
-RUN go get -d -v github.com/hanwen/go-fuse/fuse
+RUN go get -d -v bazil.org/fuse
 
 # Add SSH support
 

@@ -2,10 +2,11 @@
 package fs
 
 import (
+	"bazil.org/fuse"
+	"bazil.org/fuse/fs"
+	"context"
 	"fmt"
-	"github.com/hanwen/go-fuse/fuse"
 	"github.com/hanwen/go-fuse/fuse/nodefs"
-	"github.com/hanwen/go-fuse/fuse/pathfs"
 	"io/ioutil"
 	"log"
 	"os"
@@ -18,88 +19,34 @@ type SaFStFileSystem struct {
 	debug bool
 }
 
-func (fs *SaFStFileSystem) Chmod(name string, mode uint32, context *fuse.Context) (code fuse.Status) {
-	panic("implement me")
+func (fs *SaFStFileSystem) Root() (fs.Node, error) {
+	return &Dir{[]byte("/")}, nil
 }
 
-func (fs *SaFStFileSystem) Chown(name string, uid uint32, gid uint32, context *fuse.Context) (code fuse.Status) {
-	panic("implement me")
+type Dir struct {
+	path []byte
 }
 
-func (fs *SaFStFileSystem) Utimens(name string, Atime *time.Time, Mtime *time.Time, context *fuse.Context) (code fuse.Status) {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) Truncate(name string, size uint64, context *fuse.Context) (code fuse.Status) {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) Access(name string, mode uint32, context *fuse.Context) (code fuse.Status) {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) Link(oldName string, newName string, context *fuse.Context) (code fuse.Status) {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) Mkdir(name string, mode uint32, context *fuse.Context) fuse.Status {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) Mknod(name string, mode uint32, dev uint32, context *fuse.Context) fuse.Status {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) Rename(oldName string, newName string, context *fuse.Context) (code fuse.Status) {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) Rmdir(name string, context *fuse.Context) (code fuse.Status) {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) Unlink(name string, context *fuse.Context) (code fuse.Status) {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) GetXAttr(name string, attribute string, context *fuse.Context) (data []byte, code fuse.Status) {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) ListXAttr(name string, context *fuse.Context) (attributes []string, code fuse.Status) {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) RemoveXAttr(name string, attr string, context *fuse.Context) fuse.Status {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) SetXAttr(name string, attr string, data []byte, flags int, context *fuse.Context) fuse.Status {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) OnMount(nodeFs *pathfs.PathNodeFs) {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) OnUnmount() {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) Create(name string, flags uint32, mode uint32, context *fuse.Context) (file nodefs.File, code fuse.Status) {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) Symlink(value string, linkName string, context *fuse.Context) (code fuse.Status) {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) Readlink(name string, context *fuse.Context) (string, fuse.Status) {
-	panic("implement me")
-}
-
-func (fs *SaFStFileSystem) StatFs(name string) *fuse.StatfsOut {
-	panic("implement me")
+func (d Dir) Attr(ctx context.Context, attr *fuse.Attr) error {
+	f, err := getFile(d.path)
+	if err != nil {
+		return err
+	}
+	attr.Atime = time.Now()
+	attr.Inode = 0 // Dynamic inode would be used
+	attr.Mode = f.Mode
+	attr.Gid = f.Gid
+	attr.Uid = f.Uid
+	attr.Blocks = f.Blocks
+	attr.BlockSize = f.BlockSize
+	attr.Crtime = f.Crtime
+	attr.Flags = f.Flags
+	attr.Mtime = f.Mtime
+	attr.Nlink = f.Nlink
+	attr.Rdev = f.Rdev
+	attr.Size = f.Size
+	attr.Valid = f.Valid
+	return nil
 }
 
 // Sets a new debug value which is used for logging actions.

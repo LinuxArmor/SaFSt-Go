@@ -7,7 +7,7 @@ FROM golang:latest
 WORKDIR /tmp
 
 RUN apt-get update && \
-    apt-get install -y fuse
+    apt-get install -y fuse kmod
 
 # Copy Files to the container
 
@@ -16,7 +16,7 @@ COPY . /go/src/github.com/LinuxArmor/SaFSt-Go
 
 # Install dependencies
 
-RUN go get -d -v bazil.org/fuse
+RUN go get -u -v bazil.org/fuse github.com/syndtr/goleveldb/leveldb golang.org/x/net/context
 
 # Add SSH support
 
@@ -30,4 +30,4 @@ RUN mkdir entrypoint
 
 # Run the project
 
-RUN go run github.com/LinuxArmor/SaFSt-Go/main /home/entrypoint
+RUN modprobe fuse && go run /go/src/github.com/LinuxArmor/SaFSt-Go/main/start.go /home/entrypoint

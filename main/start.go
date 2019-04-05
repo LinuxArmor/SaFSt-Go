@@ -63,7 +63,6 @@ func main() {
 		fuse.FSName("SaFSt"),
 		fuse.Subtype("SaFSt-FileSystem"),
 		fuse.AllowOther(),
-		fuse.AllowDev(),
 		fuse.LocalVolume(),
 		fuse.VolumeName("SaFSt"))
 	if err != nil {

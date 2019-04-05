@@ -5,15 +5,19 @@ import (
 	"encoding/json"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
-	"log"
 	"os"
 	"syscall"
 	"time"
 )
 
-const DbFolder, FileFolder string = "/usr/local/var/safst", DbFolder + "/files"
+const (
+	FileFolder string = DbFolder + "/files"
+	DbFolder   string = "/usr/local/var/safst"
+)
 
-var Db, Err = leveldb.OpenFile(DbFolder, &opt.Options{})
+var (
+	Db, Err = leveldb.OpenFile(DbFolder, &opt.Options{})
+)
 
 // Sets up the root folder in the database
 func SetUpRoot() error {
@@ -61,13 +65,10 @@ func SetUpRoot() error {
 }
 
 // Gets the file at the specfied path and returns its saved attributes.
-// The root folder should always be specified.
-// Strong Consistency is applied
 func getFile(path []byte) (fuse.Attr, error) {
-	file, err := Db.Get(path, &(opt.ReadOptions{}))
+	file, err := Db.Get(path, nil)
 
 	if err != nil {
-		log.Println(err)
 		if err == leveldb.ErrNotFound {
 			return fuse.Attr{}, fuse.Errno(syscall.ENOENT)
 		}
@@ -76,11 +77,29 @@ func getFile(path []byte) (fuse.Attr, error) {
 
 	var f fuse.Attr
 
-	err = json.Unmarshal(file, f)
+	err = json.Unmarshal(file, &f)
 
 	if err != nil {
 		return fuse.Attr{}, err
 	}
 
 	return f, nil
+}
+
+// Saves the attributes of a file into the database of attributes
+func PutFile(path []byte, attr fuse.Attr) error {
+	mrshld, err := json.Marshal(attr)
+
+	if err != nil {
+		return err
+	}
+
+	err = Db.Put(path, mrshld, nil)
+
+	return err
+}
+
+// Deletes the file attributes of a path from the database of attributes
+func DeleteFile(path []byte) error {
+	return Db.Delete(path, nil)
 }

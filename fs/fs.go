@@ -7,6 +7,7 @@ import (
 	"golang.org/x/net/context"
 	"io/ioutil"
 	"log"
+	"os"
 	"path"
 	"syscall"
 	"time"
@@ -26,9 +27,11 @@ type Dir struct {
 
 func (d Dir) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
 	npath := path.Join(FileFolder, string(d.path))
+	log.Println(npath)
 	entries, err := ioutil.ReadDir(npath)
 
 	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 	var dirents []fuse.Dirent
@@ -52,14 +55,13 @@ func (d Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 }
 
 func (d Dir) Attr(ctx context.Context, attr *fuse.Attr) error {
-	log.Printf("Dir Attributes of %s\n", d.path)
 	f, err := getFile(d.path)
 	if err != nil {
 		return err
 	}
 	attr.Atime = f.Atime
 	attr.Inode = 0 // Dynamic inode would be used
-	attr.Mode = f.Mode
+	attr.Mode = os.ModeDir | f.Mode
 	attr.Gid = f.Gid
 	attr.Uid = f.Uid
 	attr.Blocks = f.Blocks

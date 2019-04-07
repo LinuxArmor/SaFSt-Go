@@ -1,5 +1,5 @@
 // This package includes basic fuse-ops
-package fs
+package main
 
 import (
 	"bazil.org/fuse"

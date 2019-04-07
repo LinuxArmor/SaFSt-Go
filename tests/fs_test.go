@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"../fs"
+	fs ".."
 	"bazil.org/fuse"
 	fs2 "bazil.org/fuse/fs"
 	"fmt"

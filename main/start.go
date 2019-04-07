@@ -49,8 +49,8 @@ func main() {
 		log.Fatal("Mountpoint unspecified")
 	}
 
-	checkDirectory("/usr/local/var/safst")
-	checkDirectory("/usr/local/var/safst/files")
+	checkDirectory(fs2.DbFolder)
+	checkDirectory(fs2.FileFolder)
 
 	err := fs2.SetUpRoot()
 

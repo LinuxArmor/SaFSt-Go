@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	FileFolder string = DbFolder + "/files"
+	FileFolder        = DbFolder + "/files"
 	DbFolder   string = "/usr/local/var/safst"
 )
 

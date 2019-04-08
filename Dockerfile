@@ -16,7 +16,7 @@ COPY . /go/src/github.com/LinuxArmor/SaFSt-Go
 
 # Install dependencies
 
-RUN go get -u -v bazil.org/fuse github.com/syndtr/goleveldb/leveldb golang.org/x/net/context
+RUN go get -d -v ./...
 
 # Add SSH support
 
@@ -30,4 +30,7 @@ RUN mkdir entrypoint
 
 # Run the project
 
-RUN modprobe fuse && go run /go/src/github.com/LinuxArmor/SaFSt-Go/main/start.go /home/entrypoint
+RUN modprobe fuse && \
+    chmod 666 /dev/fuse && \
+    chown root:$USER /etc/fuse.conf && \
+    go run /go/src/github.com/LinuxArmor/SaFSt-Go/main/start.go /home/entrypoint

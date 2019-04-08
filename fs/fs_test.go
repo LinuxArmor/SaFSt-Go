@@ -1,10 +1,10 @@
 package fs_test
 
 import (
-	fs "."
 	"bazil.org/fuse"
 	fs2 "bazil.org/fuse/fs"
 	"fmt"
+	"github.com/LinuxArmor/fs"
 	"log"
 	"os"
 	"path"

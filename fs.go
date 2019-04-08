@@ -177,9 +177,9 @@ func (d Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 		return nil, err
 	}
 	if file.Mode.IsDir() {
-		return Dir{p}, nil
+		return &Dir{p}, nil
 	}
-	return File{p}, nil
+	return &File{p}, nil
 }
 
 // Returns the attributes of the folder

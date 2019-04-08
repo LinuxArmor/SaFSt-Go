@@ -13,8 +13,8 @@ before_install:
   - sudo chown root:$USER /etc/fuse.conf
 
 install:
-  - go get -d -v ./...
+  - go get -d -v main.go
 
 script:
-  - sudo -E env "PATH=$PATH" go test -v -race ./...
-  - go build -v ./...
+  - sudo -E env "PATH=$PATH" go test -v -race fs/fs_test.go
+  - go build -v main.go

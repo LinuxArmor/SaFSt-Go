@@ -59,13 +59,19 @@ func TestMain(m *testing.M) {
 
 	r := m.Run()
 
-	c.Close()
+	defer func() {
+		err = fuse.Unmount(testFolder)
+		if err != nil {
+			fmt.Println("Couldn't unmount the test folder!")
+		}
+	}()
 
-	err = fuse.Unmount(testFolder)
-
-	if err != nil {
-		fmt.Println("Couldn't unmount the test folder!")
-	}
+	defer func() {
+		err = c.Close()
+		if err != nil {
+			fmt.Println("Couldn't close the connection!")
+		}
+	}()
 
 	err = os.Remove(testFolder)
 

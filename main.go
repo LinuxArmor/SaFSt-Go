@@ -1,10 +1,10 @@
 package main
 
 import (
-	fs2 "./fs"
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 	"flag"
+	fs2 "github.com/LinuxArmor/fs"
 	"log"
 	"os"
 	"syscall"

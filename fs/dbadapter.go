@@ -1,4 +1,4 @@
-package main
+package fs
 
 import (
 	"bazil.org/fuse"
@@ -65,7 +65,7 @@ func SetUpRoot() error {
 }
 
 // Gets the file at the specfied path and returns its saved attributes.
-func getFile(path []byte) (fuse.Attr, error) {
+func GetFile(path []byte) (fuse.Attr, error) {
 	file, err := Db.Get(path, nil)
 
 	if err != nil {

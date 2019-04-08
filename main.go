@@ -1,6 +1,7 @@
 package main
 
 import (
+	fs2 "./fs"
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 	"flag"
@@ -37,21 +38,21 @@ func checkDirectory(path string) {
 }
 
 func main() {
-	if Err != nil {
-		log.Fatal(Err)
+	if fs2.Err != nil {
+		log.Fatal(fs2.Err)
 	}
 
-	defer Db.Close()
+	defer fs2.Db.Close()
 
 	flag.Parse() // parse the flags from the command line
 	if len(flag.Args()) < 1 {
 		log.Fatal("Mountpoint unspecified")
 	}
 
-	checkDirectory(DbFolder)
-	checkDirectory(FileFolder)
+	checkDirectory(fs2.DbFolder)
+	checkDirectory(fs2.FileFolder)
 
-	err := SetUpRoot()
+	err := fs2.SetUpRoot()
 
 	if err != nil {
 		log.Fatal(err)
@@ -69,7 +70,7 @@ func main() {
 	}
 	defer c.Close()
 
-	err = fs.Serve(c, NewFileSystem(flag.Arg(0)))
+	err = fs.Serve(c, fs2.NewFileSystem(flag.Arg(0)))
 
 	if err != nil {
 		log.Fatal(err)

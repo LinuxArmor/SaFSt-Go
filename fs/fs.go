@@ -1,5 +1,5 @@
 // This package includes basic fuse-ops
-package main
+package fs
 
 import (
 	"bazil.org/fuse"
@@ -46,20 +46,32 @@ func getRWX(who uint8, mode os.FileMode) (bool, bool, bool) {
 	}
 }
 
+func convertPathError(err *os.PathError) error {
+	if os.IsNotExist(err) {
+		return fuse.ENOENT
+	} else if os.IsPermission(err) {
+		return fuse.EPERM
+	} else if os.IsExist(err) {
+		return fuse.EEXIST
+	} else {
+		return err
+	}
+}
+
 // Checks if the permissions match
 // fuid, guid: the uid of the file and the accessor respectively
 // fgid, ggid: the gid of the file and the accessor respectively
 // fmode, gmode: the uid of the file and the accessor respectively
 // rwx: 1 to read 2 to write 4 to execute, can be combined together
-func checkPerms(fuid, guid uint32, fgid, ggid uint32, fmode, gmode os.FileMode, rwx uint8) (bul bool) {
+func checkPerms(fuid, guid uint32, fgid, ggid uint32, mode os.FileMode, rwx uint8) (bul bool) {
 	if guid == 0 {
 		return true
 	}
 
-	bul = false
+	bul = true
 
 	if fuid == guid {
-		r, w, x := getRWX(0, gmode)
+		r, w, x := getRWX(0, mode)
 		if rwx&1 == 1 {
 			bul = bul && r
 		}
@@ -70,7 +82,7 @@ func checkPerms(fuid, guid uint32, fgid, ggid uint32, fmode, gmode os.FileMode, 
 			bul = bul && x
 		}
 	} else if fgid == ggid {
-		r, w, x := getRWX(1, gmode)
+		r, w, x := getRWX(1, mode)
 		if rwx&1 == 1 {
 			bul = bul && r
 		}
@@ -82,7 +94,7 @@ func checkPerms(fuid, guid uint32, fgid, ggid uint32, fmode, gmode os.FileMode, 
 			bul = bul && x
 		}
 	} else {
-		r, w, x := getRWX(2, gmode)
+		r, w, x := getRWX(2, mode)
 		if rwx&1 == 1 {
 			bul = bul && r
 		}
@@ -100,22 +112,23 @@ func checkPerms(fuid, guid uint32, fgid, ggid uint32, fmode, gmode os.FileMode, 
 
 // Implements mkdir inside the folder
 func (d Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error) {
-	dat, err := getFile(d.path)
+	dat, err := GetFile(d.path)
 
 	if err != nil {
-		return nil, err
+		return nil, convertPathError(err.(*os.PathError))
 	}
 
-	if checkPerms(dat.Uid, req.Uid, dat.Gid, req.Gid, dat.Mode, req.Mode, 2) {
+	if checkPerms(dat.Uid, req.Uid, dat.Gid, req.Gid, dat.Mode, 2) {
 		log.Println(path.Join(FileFolder, string(d.path), req.Name))
 		err = os.Mkdir(path.Join(FileFolder, string(d.path), req.Name), os.ModeDir|0700)
 
 		if err != nil {
-			log.Println(err)
 			return nil, err
 		}
 
 		npath := []byte(path.Join(string(d.path), req.Name))
+
+		log.Println(string(npath))
 
 		var attr fuse.Attr
 		s, err := os.Stat(path.Join(FileFolder, string(d.path), req.Name))
@@ -128,7 +141,7 @@ func (d Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error)
 		f := s.Sys().(*syscall.Stat_t)
 		attr.Atime = time.Now()
 		attr.Inode = 0 // Dynamic inode would be used
-		attr.Mode = os.ModeDir | os.FileMode(f.Mode)
+		attr.Mode = os.ModeDir | req.Mode
 		attr.Gid = req.Gid
 		attr.Uid = req.Uid
 		attr.Blocks = uint64(f.Blocks)
@@ -147,9 +160,9 @@ func (d Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error)
 		}
 
 		log.Println("Successfully Mkdir")
-		return Dir{npath}, nil
+		return &Dir{npath}, nil
 	}
-	return nil, syscall.EACCES
+	return nil, fuse.EPERM
 }
 
 // Implements ls inside the folder
@@ -172,7 +185,7 @@ func (d Dir) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
 // Implements lookup for files inside the folder
 func (d Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 	p := []byte(path.Join(string(d.path), name))
-	file, err := getFile(p)
+	file, err := GetFile(p)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +197,7 @@ func (d Dir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 
 // Returns the attributes of the folder
 func (d Dir) Attr(ctx context.Context, attr *fuse.Attr) error {
-	f, err := getFile(d.path)
+	f, err := GetFile(d.path)
 	if err != nil {
 		return err
 	}
@@ -211,7 +224,7 @@ type File struct {
 
 // Returns the attributes of the file
 func (fi File) Attr(ctx context.Context, attr *fuse.Attr) error {
-	f, err := getFile(fi.path)
+	f, err := GetFile(fi.path)
 	if err != nil {
 		return err
 	}

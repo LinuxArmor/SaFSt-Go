@@ -4,7 +4,7 @@ import (
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 	"flag"
-	fs2 "github.com/LinuxArmor/fs"
+	fs2 "github.com/LinuxArmor/SaFSt-Go/fs"
 	"log"
 	"os"
 	"syscall"

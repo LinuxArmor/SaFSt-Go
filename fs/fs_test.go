@@ -62,6 +62,7 @@ func TestMain(m *testing.M) {
 	}
 
 	defer func() {
+		log.Println("Unmounting the filesystem.")
 		err := fuse.Unmount(testFolder)
 		if err != nil {
 			fmt.Printf("Failed to unmount the test folder: %s\n", err)
@@ -101,7 +102,13 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	defer c.Close()
+	defer func() {
+		err := c.Close()
+
+		if err != nil {
+			log.Println("Unable to close the connection with the database.")
+		}
+	}()
 
 	os.Exit(m.Run())
 }
@@ -146,5 +153,23 @@ func TestDir_Mkdir(t *testing.T) {
 		t.Errorf("The new folder in the file folder doesn't have the file folder file mode")
 	}
 
-	t.Logf("Successfully created a new directory!")
+	t.Log("Successfully created a new directory!")
+}
+
+func TestDir_Remove(t *testing.T) {
+	newFolder := path.Join(testFolder, "toremove")
+
+	if err := os.Mkdir(newFolder, os.ModeDir|0700); err != nil {
+		t.Errorf("Couldn't create the folder to remove it: %s", err)
+	}
+
+	if err := os.RemoveAll(newFolder); err != nil {
+		t.Errorf("Couldn't remove the test folder that should've been removed: %s", err)
+	}
+
+	if fi, err := os.Stat(newFolder); err != os.ErrNotExist && fi != nil {
+		t.Errorf("The folder that should've been removed still exist! FileInfo: %s", fi)
+	}
+
+	t.Log("Successfully deleted a new directory")
 }

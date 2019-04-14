@@ -115,20 +115,17 @@ func (d Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error)
 	dat, err := GetFile(d.path)
 
 	if err != nil {
-		return nil, convertPathError(err.(*os.PathError))
+		return nil, err
 	}
 
 	if checkPerms(dat.Uid, req.Uid, dat.Gid, req.Gid, dat.Mode, 2) {
-		log.Println(path.Join(FileFolder, string(d.path), req.Name))
 		err = os.Mkdir(path.Join(FileFolder, string(d.path), req.Name), os.ModeDir|0700)
 
 		if err != nil {
-			return nil, err
+			return nil, convertPathError(err.(*os.PathError))
 		}
 
 		npath := []byte(path.Join(string(d.path), req.Name))
-
-		log.Println(string(npath))
 
 		var attr fuse.Attr
 		s, err := os.Stat(path.Join(FileFolder, string(d.path), req.Name))
@@ -216,6 +213,34 @@ func (d Dir) Attr(ctx context.Context, attr *fuse.Attr) error {
 	attr.Size = f.Size
 	attr.Valid = f.Valid
 	return nil
+}
+
+// Implements remove inside the folder
+func (d Dir) Remove(ctx context.Context, req *fuse.RemoveRequest) error {
+	p := []byte(path.Join(string(d.path), req.Name))
+	node, err := GetFile(p)
+
+	if err != nil {
+		return err
+	}
+
+	if checkPerms(node.Uid, req.Uid, node.Gid, req.Gid, node.Mode, 2) {
+		err = os.Remove(path.Join(FileFolder, string(p)))
+
+		if err != nil {
+			return convertPathError(err.(*os.PathError))
+		}
+
+		err = DeleteFile(p)
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+	return fuse.EPERM
+
 }
 
 type File struct {

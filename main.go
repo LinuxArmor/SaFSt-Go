@@ -4,6 +4,7 @@ import (
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 	"flag"
+	"github.com/LinuxArmor/SaFSt-Go/analyzing"
 	fs2 "github.com/LinuxArmor/SaFSt-Go/fs"
 	"log"
 	"os"
@@ -51,8 +52,14 @@ func main() {
 
 	checkDirectory(fs2.DbFolder)
 	checkDirectory(fs2.FileFolder)
+	checkDirectory(analyzing.PERMFOLDER)
+	err := analyzing.InitDB()
 
-	err := fs2.SetUpRoot()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = fs2.SetUpRoot()
 
 	if err != nil {
 		log.Fatal(err)

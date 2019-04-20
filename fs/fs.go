@@ -18,14 +18,11 @@ type SaFStFileSystem struct {
 	dir string
 }
 
+const URDONLY_MODE = os.ModeDir | 0700
+
 // Returns the root directory
 func (fs *SaFStFileSystem) Root() (fs.Node, error) {
 	return &Dir{[]byte("/")}, nil
-}
-
-// Represents a directory in the file system
-type Dir struct {
-	path []byte
 }
 
 // Checks the RWX based of the mode and the person trying to access
@@ -110,6 +107,60 @@ func checkPerms(fuid, guid uint32, fgid, ggid uint32, mode os.FileMode, rwx uint
 	return
 }
 
+// Represents a directory in the file system
+type Dir struct {
+	path []byte
+}
+
+// Implements mknod inside the folder
+func (d Dir) Mknod(ctx context.Context, req *fuse.MknodRequest) (fs.Node, error) {
+	npath := path.Join(string(d.path), req.Name)
+	dat, err := GetFile(d.path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if checkPerms(dat.Uid, req.Uid, dat.Gid, req.Gid, dat.Mode, 2) && req.Mode.IsRegular() {
+		err = syscall.Mknod(npath, 0700, int(req.Rdev))
+		if err != nil {
+			return nil, err
+		}
+
+		var attr fuse.Attr
+
+		attr.Rdev = req.Rdev
+		attr.Atime = time.Now()
+		attr.Mode = req.Mode
+		attr.Gid = req.Gid
+		attr.Uid = req.Uid
+		attr.Mtime = time.Now()
+		attr.Ctime = time.Now()
+		attr.Inode = 0
+
+		f, err := os.Stat(npath)
+
+		if err != nil {
+			return nil, convertPathError(err.(*os.PathError))
+		}
+
+		file := f.Sys().(*syscall.Stat_t)
+		attr.BlockSize = uint32(file.Blksize)
+		attr.Blocks = uint64(file.Blocks)
+		attr.Nlink = uint32(file.Nlink)
+		attr.Size = uint64(file.Size)
+
+		err = PutFile([]byte(npath), attr)
+
+		if err != nil {
+			return nil, err
+		}
+		return &File{[]byte(npath)}, nil
+	} else {
+		return nil, fuse.EPERM
+	}
+}
+
 // Implements mkdir inside the folder
 func (d Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error) {
 	dat, err := GetFile(d.path)
@@ -119,7 +170,7 @@ func (d Dir) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (fs.Node, error)
 	}
 
 	if checkPerms(dat.Uid, req.Uid, dat.Gid, req.Gid, dat.Mode, 2) {
-		err = os.Mkdir(path.Join(FileFolder, string(d.path), req.Name), os.ModeDir|0700)
+		err = os.Mkdir(path.Join(FileFolder, string(d.path), req.Name), URDONLY_MODE)
 
 		if err != nil {
 			return nil, convertPathError(err.(*os.PathError))

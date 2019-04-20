@@ -1,11 +1,11 @@
-package main
+package analyzing
 
 import (
 	"debug/elf"
 	"fmt"
 )
 
-func check_permissions(elf_file *elf.File) int {
+func CheckPermissions(elf_file *elf.File) int {
 	var libs []string
 	var syms []elf.ImportedSymbol
 
@@ -16,12 +16,4 @@ func check_permissions(elf_file *elf.File) int {
 	fmt.Printf("%v\n", libs)
 	fmt.Printf("syms: %v\n", syms)
 	return 0
-}
-
-func main() {
-	var e *elf.File
-	var err error
-	e, err = elf.Open("a.out")
-	fmt.Println(err)
-	check_permissions(e)
 }

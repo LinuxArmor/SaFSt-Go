@@ -173,3 +173,23 @@ func TestDir_Remove(t *testing.T) {
 
 	t.Log("Successfully deleted a new directory")
 }
+
+func TestDir_Mknod(t *testing.T) {
+	newFile := path.Join(testFolder, "test.txt")
+	file, err := os.Create(newFile)
+
+	if err != nil {
+		t.Errorf("Couldn't create a new file in the filesystem: %s", err)
+		t.FailNow()
+	}
+
+	defer file.Close()
+
+	if fi, err := file.Stat(); err != nil {
+		t.Errorf("Can't stat the newly created file: %s", err)
+	} else if fi.Mode() != 0666 {
+		t.Errorf("The new file's mode is not right: %s != 0666", fi.Mode())
+	}
+
+	t.Log("Successfully created a new file!")
+}

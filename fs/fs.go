@@ -114,7 +114,7 @@ type Dir struct {
 
 // Implements mknod inside the folder
 func (d Dir) Mknod(ctx context.Context, req *fuse.MknodRequest) (fs.Node, error) {
-	npath := path.Join(string(d.path), req.Name)
+	npath := path.Join(FileFolder, string(d.path), req.Name)
 	dat, err := GetFile(d.path)
 
 	if err != nil {
@@ -298,6 +298,30 @@ type File struct {
 	path []byte
 }
 
+func (fi File) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
+	attr, err := GetFile(fi.path)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if flags := req.Flags; flags.IsReadOnly() && !checkPerms(attr.Uid, req.Uid, attr.Gid, req.Gid, attr.Mode, 1) {
+		return nil, fuse.EPERM
+	} else if flags.IsWriteOnly() && !checkPerms(attr.Uid, req.Uid, attr.Gid, req.Gid, attr.Mode, 2) {
+		return nil, fuse.EPERM
+	} else if flags.IsReadWrite() && !checkPerms(attr.Uid, req.Uid, attr.Gid, req.Gid, attr.Mode, 3) {
+		return nil, fuse.EPERM
+	}
+
+	file, err := os.Open(path.Join(FileFolder, string(fi.path)))
+
+	if err != nil {
+		return nil, convertPathError(err.(*os.PathError))
+	}
+
+	return &FileHandle{&fi, file}, nil
+}
+
 // Returns the attributes of the file
 func (fi File) Attr(ctx context.Context, attr *fuse.Attr) error {
 	f, err := GetFile(fi.path)
@@ -318,6 +342,24 @@ func (fi File) Attr(ctx context.Context, attr *fuse.Attr) error {
 	attr.Rdev = f.Rdev
 	attr.Size = f.Size
 	attr.Valid = f.Valid
+	return nil
+}
+
+type FileHandle struct {
+	file   *File
+	osfile *os.File
+}
+
+func (handle *FileHandle) Flush(ctx context.Context, req *fuse.FlushRequest) error {
+	if err := handle.osfile.Close(); err != nil {
+		switch err.(type) {
+		case *os.PathError:
+			return convertPathError(err.(*os.PathError))
+		default:
+			return err
+		}
+	}
+
 	return nil
 }
 
